@@ -1,0 +1,237 @@
+paths:
+  /api/v1/product/search:
+    get:
+      responses:
+        '200':
+          schema:
+            $ref: '#/definitions/ProductListResponse'
+          description: Возвращает список товаров
+        '400':
+          schema:
+            $ref: '#/definitions/BadRequest'
+          description: Неверные параметры
+      parameters:
+        - in: query
+          name: from
+          required: false
+          type: integer
+          format: int32
+          default: null
+          x-nullable: true
+          description: Курсор для выдачи значений
+        - in: query
+          name: q
+          required: true
+          type: string
+          description: Поисковый запрос
+        - in: query
+          name: limit
+          required: false
+          type: integer
+          format: int32
+          default: 20
+          description: Количество возвращаемых значений
+      tags:
+        - product
+      description: Поиск товаров
+      produces:
+        - application/json
+  /api/v1/product/{prod_id}:
+    get:
+      responses:
+        '200':
+          schema:
+            $ref: '#/definitions/ProductOfferResponse'
+          description: Возвращает информацию о товаре
+        '404':
+          schema:
+            $ref: '#/definitions/NotFound'
+          description: Товар не найден
+      parameters:
+        - in: path
+          name: prod_id
+          required: true
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 2147483647
+          description: ID товара
+      tags:
+        - product
+      description: Получение информации о товаре
+      produces:
+        - application/json
+  /api/v1/auth/by_token:
+    post:
+      responses:
+        '200':
+          schema:
+            $ref: '#/definitions/Auth'
+          description: Возвращает данные клиента
+        '401':
+          schema:
+            $ref: '#/definitions/Unauthorized'
+          description: Авторизация не пройдена
+      parameters:
+        - in: body
+          required: false
+          name: body
+          schema:
+            $ref: '#/definitions/Token'
+      tags:
+        - auth
+      description: Авторизация по токену
+      produces:
+        - application/json
+info:
+  title: Yet another Product Search
+  version: 0.0.1
+swagger: '2.0'
+definitions:
+  BadRequest:
+    type: object
+    properties:
+      message:
+        type: string
+        description: bad-parameters
+    required:
+      - message
+  ProductResponse:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      text:
+        type: string
+      min_price:
+        type: number
+        format: float
+      count_offers:
+        type: integer
+        format: int32
+      image:
+        type: string
+      has_personal_offer:
+        type: boolean
+      id:
+        type: integer
+        format: int32
+    required:
+      - count_offers
+      - description
+      - has_personal_offer
+      - id
+      - image
+      - min_price
+      - name
+      - text
+  ProductListResponse:
+    type: object
+    properties:
+      products:
+        type: array
+        items:
+          $ref: '#/definitions/ProductResponse'
+  NotFound:
+    type: object
+    properties:
+      message:
+        type: string
+        description: not-found
+    required:
+      - message
+  OfferResponse:
+    type: object
+    properties:
+      cashback_amount:
+        type: number
+        format: float
+        default: null
+        x-nullable: true
+      cashback_type:
+        type: string
+      curr_price:
+        type: number
+        format: float
+      cashback_percent:
+        type: number
+        format: float
+        default: null
+        x-nullable: true
+      price_type:
+        type: string
+      currency:
+        type: string
+      partner_name:
+        type: string
+      partner_link:
+        type: string
+      old_price:
+        type: number
+        format: float
+        default: null
+        x-nullable: true
+    required:
+      - cashback_type
+      - curr_price
+      - currency
+      - partner_link
+      - partner_name
+      - price_type
+  ProductOfferResponse:
+    type: object
+    properties:
+      product_title:
+        type: string
+      images:
+        type: array
+        items:
+          type: string
+      min_price:
+        type: number
+        format: float
+      product_description:
+        type: string
+      offers:
+        type: array
+        items:
+          $ref: '#/definitions/OfferResponse'
+    required:
+      - images
+      - min_price
+      - product_description
+      - product_title
+  Token:
+    type: object
+    properties:
+      access_token:
+        type: string
+    required:
+      - access_token
+  Unauthorized:
+    type: object
+    properties:
+      message:
+        type: string
+        description: unauthorized
+    required:
+      - message
+  Auth:
+    type: object
+    properties:
+      email:
+        type: string
+        description: Email клиента
+      expires_at:
+        type: integer
+        format: int32
+        description: Временная метка истечения жизни сессии
+      auth_token:
+        type: string
+        description: Токен доступа
+    required:
+      - auth_token
+      - email
+      - expires_at

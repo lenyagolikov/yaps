@@ -1,0 +1,22 @@
+lint-and-run-tests:
+  stage: test
+  script:
+    - python3 -m venv venv
+    - ./venv/bin/python -m pip install -r requirements.dev.txt
+    - . ./venv/bin/activate
+    - make lint
+    - make test-ci
+
+deploy:
+  stage: deploy
+  tags:
+    - docker
+  only:
+    - master
+  image: ansible/ansible-runner
+  script:
+    - chmod og= $ID_RSA
+    - export ANSIBLE_HOST_KEY_CHECKING=False
+    - export ANSIBLE_PRIVATE_KEY_FILE=${ID_RSA}
+    - export ANSIBLE_INVENTORY=deploy/ansible/hosts.ini
+    - ansible-playbook -vv deploy/ansible/playbook.yml

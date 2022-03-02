@@ -1,0 +1,69 @@
+version: '3'
+
+services:
+
+  db:
+    image: postgres:13.0
+    container_name: yaps-db
+    env_file:
+      - ./deploy/.env.prod
+    volumes:
+      - yaps_db_data:/var/lib/postgresql/data/
+    networks:
+      - yaps_net
+
+  cache:
+    image: redis:6.2.6
+    container_name: yaps-cache
+    networks:
+      - yaps_net
+
+  yaps:
+    build: .
+    image: yaps-api:0.0.1
+    container_name: yaps-web
+    env_file:
+      - ./deploy/.env.prod
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8080
+      - WORKERS_NUM=2
+      - POSTGRES_HOSTS=db
+      - CACHE_TYPE=redis
+      - REDIS_URL=redis://cache:6379/0
+      - ES_HOSTS=elasticsearch:9200
+      - ECHO_DB=y
+      - ECHO_POOL=y
+    ports:
+      - 8080:8080
+    volumes:
+      - /var/log/nginx:/var/log/nginx
+    depends_on:
+      - db
+      - cache
+      - elasticsearch
+    networks:
+      - yaps_net
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.2
+    container_name: yaps-elastic
+    volumes:
+      - yaps_elastic_data:/usr/share/elasticsearch/data
+    environment:
+      - node.name=yaps-node
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    networks:
+      - yaps_net
+    ports:
+      - 0.0.0.0:9200:9200
+      - 0.0.0.0:9300:9300
+
+
+volumes:
+  yaps_db_data:
+  yaps_elastic_data:
+
+networks:
+  yaps_net:

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# Wait for DB
+sleep 5
+
+# Run migrations
+yaps-db upgrade head
+
+# Run app with gunicorn
+yaps-api

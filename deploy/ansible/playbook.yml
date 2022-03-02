@@ -1,0 +1,12 @@
+- hosts: yap-prod
+  tasks:
+    - name: Clean up old images
+      command: docker system prune -f
+    - name: Get changes from server
+      command: chdir=/root/yaps git fetch --all
+    - name: Switch to main branch with app
+      command: chdir=/root/yaps git checkout master
+    - name: Update main branch with app
+      command: chdir=/root/yaps git reset --hard origin/master
+    - name: Run app via docker-compose
+      shell: chdir=/root/yaps make run-prod
